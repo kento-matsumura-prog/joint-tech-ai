@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>joint tech AIエージェント v2</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --navy:#0f2035;--navy2:#1a3352;--navy3:#243d5c;
+  --teal:#0d9488;--teal2:#14b8a6;--mint:#ccfbf1;
+  --gold:#f59e0b;--green:#10b981;--blue:#3b82f6;
+  --white:#fff;--gray1:#f8fafc;--gray2:#e2e8f0;--gray3:#94a3b8;
+  --text:#1e293b;--red:#ef4444;--purple:#8b5cf6;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--navy);color:var(--white);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ヘッダー */
+header{background:var(--navy2);border-bottom:1px solid rgba(13,148,136,0.3);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--teal),var(--teal2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;}
+.logo-text{font-size:15px;font-weight:700;}
+.logo-sub{font-size:10px;color:var(--teal2);}
+.header-badges{display:flex;gap:6px;align-items:center;}
+.badge{font-size:10px;padding:3px 9px;border-radius:12px;font-weight:500;display:flex;align-items:center;gap:4px;}
+.badge-teal{background:rgba(13,148,136,0.15);color:var(--teal2);border:1px solid rgba(13,148,136,0.3);}
+.badge-gold{background:rgba(245,158,11,0.15);color:var(--gold);border:1px solid rgba(245,158,11,0.3);}
+.badge-blue{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3);}
+.dot{width:5px;height:5px;border-radius:50%;animation:pulse 2s infinite;}
+.dot-g{background:var(--green);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.api-row{display:flex;gap:6px;align-items:center;}
+.api-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:var(--white);padding:5px 9px;font-size:11px;width:200px;font-family:'JetBrains Mono',monospace;}
+.api-input:focus{outline:none;border-color:var(--teal);}
+.btn-xs{padding:5px 10px;border-radius:6px;border:none;font-size:11px;font-weight:500;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .2s;}
+.btn-teal{background:var(--teal);color:#fff;}
+.btn-teal:hover{background:var(--teal2);}
+
+/* メイン */
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* サイドバー */
+.sidebar{width:230px;background:var(--navy2);border-right:1px solid rgba(13,148,136,0.15);display:flex;flex-direction:column;flex-shrink:0;}
+.sb-header{padding:12px 14px 8px;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gray3);font-weight:500;}
+
+/* 優先度パネル */
+.priority-panel{padding:0 10px 10px;}
+.priority-item{border-radius:8px;padding:8px 10px;margin-bottom:6px;border:1px solid;}
+.p-kb{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.2);}
+.p-std{background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2);}
+.p-web{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);}
+.p-label{font-size:10px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;justify-content:space-between;}
+.p-label-kb{color:var(--green);}
+.p-label-std{color:var(--blue);}
+.p-label-web{color:var(--gold);}
+.p-desc{font-size:10px;color:var(--gray3);line-height:1.5;}
+.priority-rank{font-size:9px;background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:4px;}
+
+.sb-divider{height:1px;background:rgba(255,255,255,0.06);margin:4px 0;}
+
+/* Google Drive設定 */
+.drive-section{padding:8px 12px;}
+.drive-label{font-size:10px;color:var(--green);font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.drive-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:6px;color:var(--white);padding:5px 8px;font-size:11px;font-family:'JetBrains Mono',monospace;margin-bottom:4px;}
+.drive-input:focus{outline:none;border-color:var(--green);}
+.drive-hint{font-size:10px;color:var(--gray3);line-height:1.5;}
+
+/* クイックボタン */
+.quick-section{padding:8px 10px;flex:1;overflow-y:auto;}
+.quick-btn{display:block;width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:7px;color:var(--white);padding:7px 10px;margin-bottom:5px;font-size:11px;text-align:left;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .2s;line-height:1.4;}
+.quick-btn:hover{background:rgba(13,148,136,0.15);border-color:var(--teal);}
+.q-tag{font-size:9px;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:600;}
+.tag-excel{background:rgba(16,185,129,0.2);color:var(--green);}
+.tag-doc{background:rgba(59,130,246,0.2);color:var(--blue);}
+.tag-q{background:rgba(148,163,184,0.2);color:var(--gray3);}
+
+/* チャットエリア */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
+.messages::-webkit-scrollbar{width:3px;}
+.messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+
+/* ウェルカム */
+.welcome{text-align:center;padding:30px 20px;}
+.welcome h2{font-size:20px;font-weight:300;color:var(--teal2);margin-bottom:10px;}
+.arch-mini{display:flex;gap:8px;justify-content:center;margin:14px 0;flex-wrap:wrap;}
+.arch-box{font-size:10px;padding:5px 10px;border-radius:6px;font-weight:500;}
+.arch-kb{background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3);}
+.arch-std{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3);}
+.arch-web{background:rgba(245,158,11,0.15);color:var(--gold);border:1px solid rgba(245,158,11,0.3);}
+.arch-arrow{color:var(--gray3);font-size:14px;display:flex;align-items:center;}
+.welcome p{font-size:13px;color:var(--gray3);line-height:1.7;}
+
+/* メッセージ */
+.msg{display:flex;gap:9px;max-width:100%;}
+.msg.user{flex-direction:row-reverse;}
+.msg-avatar{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.msg.ai .msg-avatar{background:linear-gradient(135deg,var(--teal),var(--teal2));}
+.msg.user .msg-avatar{background:rgba(255,255,255,0.1);}
+.msg-content{max-width:calc(100% - 70px);}
+.msg-bubble{padding:11px 14px;border-radius:10px;font-size:13px;line-height:1.75;white-space:pre-wrap;word-wrap:break-word;}
+.msg.ai .msg-bubble{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:3px 10px 10px 10px;}
+.msg.user .msg-bubble{background:var(--teal);border-radius:10px 3px 10px 10px;}
+.msg-footer{margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.msg.user .msg-footer{justify-content:flex-end;}
+.src-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;}
+.src-kb{background:rgba(16,185,129,0.15);color:var(--green);}
+.src-std{background:rgba(59,130,246,0.15);color:var(--blue);}
+.src-web{background:rgba(245,158,11,0.15);color:var(--gold);}
+.src-time{font-size:10px;color:var(--gray3);}
+
+/* ファイルボタン */
+.file-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.file-btn{padding:6px 12px;border-radius:7px;border:1px solid;font-size:11px;font-weight:600;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .2s;display:flex;align-items:center;gap:4px;}
+.fb-excel{border-color:rgba(16,185,129,0.35);color:var(--green);background:rgba(16,185,129,0.07);}
+.fb-excel:hover{background:rgba(16,185,129,0.18);}
+.fb-word{border-color:rgba(59,130,246,0.35);color:var(--blue);background:rgba(59,130,246,0.07);}
+.fb-word:hover{background:rgba(59,130,246,0.18);}
+.fb-copy{border-color:rgba(148,163,184,0.25);color:var(--gray3);background:rgba(148,163,184,0.05);}
+.fb-copy:hover{background:rgba(148,163,184,0.12);}
+
+/* ローディング */
+.loading-msg{display:flex;gap:9px;}
+.loading-bubble{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);border-radius:3px 10px 10px 10px;padding:12px 16px;}
+.dots{display:flex;gap:4px;}
+.dots span{width:6px;height:6px;border-radius:50%;background:var(--teal2);animation:bounce 1.2s infinite;}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-7px)}}
+.loading-step{font-size:11px;color:var(--teal2);margin-top:6px;}
+.loading-steps{font-size:10px;color:var(--gray3);margin-top:4px;line-height:1.6;}
+
+/* 入力エリア */
+.input-area{padding:12px 18px;background:var(--navy2);border-top:1px solid rgba(13,148,136,0.15);flex-shrink:0;}
+.toggles-row{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap;}
+.toggle-item{display:flex;align-items:center;gap:6px;font-size:11px;}
+.toggle-label{color:var(--gray3);}
+.toggle-label.active-kb{color:var(--green);}
+.toggle-label.active-web{color:var(--gold);}
+.sw{position:relative;width:32px;height:18px;display:inline-block;}
+.sw input{opacity:0;width:0;height:0;}
+.sw-slider{position:absolute;inset:0;border-radius:9px;cursor:pointer;transition:.3s;background:rgba(255,255,255,0.1);}
+.sw-slider:before{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;left:3px;top:3px;transition:.3s;}
+.sw input:checked+.sw-slider{background:var(--teal);}
+.sw input:checked+.sw-slider:before{transform:translateX(14px);}
+.sw.gold input:checked+.sw-slider{background:var(--gold);}
+
+.input-row{display:flex;gap:8px;align-items:flex-end;}
+#user-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--white);padding:10px 14px;font-size:13px;font-family:'Noto Sans JP',sans-serif;resize:none;min-height:46px;max-height:130px;line-height:1.5;transition:border-color .2s;}
+#user-input:focus{outline:none;border-color:var(--teal);}
+#user-input::placeholder{color:var(--gray3);}
+#send-btn{width:46px;height:46px;border-radius:10px;background:var(--teal);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;transition:all .2s;flex-shrink:0;}
+#send-btn:hover{background:var(--teal2);transform:scale(1.04);}
+#send-btn:disabled{background:rgba(255,255,255,0.08);cursor:not-allowed;transform:none;}
+.hint{font-size:10px;color:var(--gray3);text-align:center;margin-top:7px;}
+
+/* エラー */
+.err{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);border-radius:7px;padding:9px 13px;font-size:12px;color:#fca5a5;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">joint tech AIエージェント</div>
+      <div class="logo-sub">3層ナレッジ構成 powered by Claude API</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="header-badges">
+      <div class="badge badge-teal"><span class="dot dot-g"></span>自社KB</div>
+      <div class="badge badge-blue"><span class="dot" style="background:var(--blue);"></span>業界標準</div>
+      <div class="badge badge-gold"><span class="dot" style="background:var(--gold);"></span>Web検索</div>
+    </div>
+    <div class="api-row">
+      <input type="password" class="api-input" id="api-key-input" placeholder="Anthropic APIキー..." />
+      <button class="btn-xs btn-teal" onclick="saveApiKey()">設定</button>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- サイドバー -->
+  <aside class="sidebar">
+    <div class="sb-header">ナレッジ優先度</div>
+    <div class="priority-panel">
+      <div class="priority-item p-kb">
+        <div class="p-label p-label-kb">
+          <span>✅ 自社ナレッジDB</span>
+          <span class="priority-rank">最優先</span>
+        </div>
+        <div class="p-desc">Google Drive格納ファイル<br>過去事例・マニュアル・積算</div>
+      </div>
+      <div class="priority-item p-std">
+        <div class="p-label p-label-std">
+          <span>📋 業界標準ナレッジ</span>
+          <span class="priority-rank">優先</span>
+        </div>
+        <div class="p-desc">標準仕様書・法令・技術基準<br>電気・管工事施工管理技士</div>
+      </div>
+      <div class="priority-item p-web">
+        <div class="p-label p-label-web">
+          <span>🌐 Web検索（補助）</span>
+          <span class="priority-rank">補助</span>
+        </div>
+        <div class="p-desc">最新製品・法改正情報<br>信頼性フィルター付き</div>
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <!-- Google Drive設定 -->
+    <div class="drive-section">
+      <div class="drive-label">
+        <span style="color:var(--green);">📁</span> Google Drive フォルダID
+      </div>
+      <input type="text" class="drive-input" id="drive-folder-id" placeholder="フォルダIDを入力（任意）" />
+      <div class="drive-hint">
+        DriveのURLから<br>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--teal2);">folders/★ここ★</span><br>
+        の部分をコピーして入力
+      </div>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <!-- クイックボタン -->
+    <div class="quick-section">
+      <div class="sb-header" style="padding:8px 0 6px;">よく使う依頼</div>
+
+      <button class="quick-btn" onclick="q('LED照明取替工事の施工計画書を作成してください。Google Driveの資料も参照し、Excelでダウンロードできるようにしてください。')">
+        施工計画書を作成 <span class="q-tag tag-excel">Excel</span>
+      </button>
+      <button class="quick-btn" onclick="q('電気工事の現場日報テンプレートをExcel形式で作成してください。作業内容・使用機材・安全確認・作業員数の項目を含めてください。')">
+        日報テンプレート <span class="q-tag tag-excel">Excel</span>
+      </button>
+      <button class="quick-btn" onclick="q('KY（危険予知）活動記録表をExcelで作成してください。建設現場の電気・管工事向けの項目にしてください。')">
+        KY活動記録表 <span class="q-tag tag-excel">Excel</span>
+      </button>
+      <button class="quick-btn" onclick="q('管工事における給水配管の施工手順を、公共建築工事標準仕様書に基づいて詳しく説明してください。')">
+        管工事施工手順 <span class="q-tag tag-q">質問</span>
+      </button>
+      <button class="quick-btn" onclick="q('GT-C2072SAWガス給湯器の施工時の注意事項と確認すべき法令基準を教えてください。Web検索も使って最新情報を調べてください。')">
+        給湯器施工注意事項 <span class="q-tag tag-q">質問+Web</span>
+      </button>
+      <button class="quick-btn" onclick="q('電気工事完成検査チェックリストをExcelで作成してください。電気設備工事標準仕様書に基づいた項目にしてください。')">
+        完成検査チェックリスト <span class="q-tag tag-excel">Excel</span>
+      </button>
+      <button class="quick-btn" onclick="q('施工体制台帳のWordテンプレートを作成してください。建設業法に基づいた必要項目を含めてください。')">
+        施工体制台帳 <span class="q-tag tag-doc">Word</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- チャットエリア -->
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="welcome">
+        <h2>⚡ joint tech AIエージェント</h2>
+        <div class="arch-mini">
+          <div class="arch-box arch-kb">✅ 自社Google Drive</div>
+          <div class="arch-arrow">+</div>
+          <div class="arch-box arch-std">📋 業界標準仕様</div>
+          <div class="arch-arrow">+</div>
+          <div class="arch-box arch-web">🌐 Web検索</div>
+        </div>
+        <p>3つのナレッジソースを統合して回答します。<br>
+        「ExcelやWordで作成して」と言うとファイルをダウンロードできます。<br>
+        Web検索をONにすると最新の製品情報・法改正も調べます。</p>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="toggles-row">
+        <div class="toggle-item">
+          <label class="sw">
+            <input type="checkbox" id="sw-drive" checked>
+            <span class="sw-slider"></span>
+          </label>
+          <span class="toggle-label active-kb" id="lbl-drive">📁 Google Drive参照（自社ナレッジ）</span>
+        </div>
+        <div class="toggle-item">
+          <label class="sw gold">
+            <input type="checkbox" id="sw-web">
+            <span class="sw-slider"></span>
+          </label>
+          <span class="toggle-label" id="lbl-web">🌐 Web検索（補助的に使用）</span>
+        </div>
+      </div>
+
+      <div class="input-row">
+        <textarea id="user-input"
+          placeholder="質問・依頼を入力 例：「給湯器交換工事の施工計画書をExcelで作成して。Google Driveの資料も参照して」"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button id="send-btn" onclick="sendMsg()" title="送信（Ctrl+Enter）">➤</button>
+      </div>
+      <div class="hint">Ctrl+Enter で送信 ｜ Excel・Word・CSVでダウンロード可能 ｜ 出典を自動表示</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let apiKey = localStorage.getItem('jt_api_key') || '';
+let history = [];
+let lastAiText = '';
+let lastQueryText = '';
+
+if (apiKey) document.getElementById('api-key-input').value = '••••••••••••••••';
+
+// トグルのラベル更新
+document.getElementById('sw-drive').addEventListener('change', function() {
+  const lbl = document.getElementById('lbl-drive');
+  lbl.className = 'toggle-label ' + (this.checked ? 'active-kb' : '');
+});
+document.getElementById('sw-web').addEventListener('change', function() {
+  const lbl = document.getElementById('lbl-web');
+  lbl.className = 'toggle-label ' + (this.checked ? 'active-web' : '');
+});
+
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val || val.startsWith('•')) { alert('APIキーを入力してください'); return; }
+  apiKey = val;
+  localStorage.setItem('jt_api_key', apiKey);
+  document.getElementById('api-key-input').value = '••••••••••••••••';
+  addMsg('ai', '✅ APIキーを設定しました。\n\n3層ナレッジ（自社DB・業界標準・Web検索）が使えるようになりました。ご質問をどうぞ！', []);
+}
+
+function q(text) {
+  document.getElementById('user-input').value = text;
+  sendMsg();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); sendMsg(); }
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+}
+
+function detectSources(text) {
+  const sources = [];
+  if (/Google Drive|自社|社内|登録|ナレッジ|KB/i.test(text)) sources.push('kb');
+  if (/標準仕様書|内線規程|電気工事士法|建設業法|消防法|JEAC|告示|技術基準/i.test(text)) sources.push('std');
+  if (/Web|検索|最新|公式サイト|メーカー|カタログ/i.test(text)) sources.push('web');
+  return sources;
+}
+
+function needsFile(text) {
+  return /excel|word|ファイル|作成|テンプレート|書類|帳票|チェックリスト|日報|計画書|台帳/i.test(text);
+}
+
+function addMsg(role, text, sources = [], showFile = false) {
+  const msgs = document.getElementById('messages');
+  const welcome = msgs.querySelector('.welcome');
+  if (welcome) welcome.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg ${role === 'user' ? 'user' : 'ai'}`;
+
+  const avatar = role === 'user' ? '👤' : '⚡';
+
+  let srcBadges = '';
+  if (sources.includes('kb')) srcBadges += '<span class="src-badge src-kb">✅ 自社ナレッジ</span>';
+  if (sources.includes('std')) srcBadges += '<span class="src-badge src-std">📋 標準仕様</span>';
+  if (sources.includes('web')) srcBadges += '<span class="src-badge src-web">🌐 Web参照</span>';
+
+  let fileBtns = '';
+  if (showFile) {
+    fileBtns = `<div class="file-row">
+      <button class="file-btn fb-excel" onclick="dlExcel()">📊 Excelで保存</button>
+      <button class="file-btn fb-word" onclick="dlWord()">📄 Wordで保存</button>
+      <button class="file-btn fb-copy" onclick="copyTxt()">📋 コピー</button>
+    </div>`;
+  }
+
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-content">
+      <div class="msg-bubble">${escHtml(text)}</div>
+      ${fileBtns}
+      <div class="msg-footer">
+        <span class="src-time">${getTime()}</span>
+        ${srcBadges}
+      </div>
+    </div>`;
+
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addLoading() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'loading-msg';
+  div.id = 'loading-el';
+  div.innerHTML = `
+    <div class="msg-avatar" style="background:linear-gradient(135deg,#0d9488,#14b8a6);width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;">⚡</div>
+    <div>
+      <div class="loading-bubble">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="loading-step" id="loading-step">処理中...</div>
+        <div class="loading-steps" id="loading-steps"></div>
+      </div>
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function updateLoading(step, detail = '') {
+  const s = document.getElementById('loading-step');
+  const d = document.getElementById('loading-steps');
+  if (s) s.textContent = step;
+  if (d && detail) d.innerHTML += detail + '<br>';
+}
+
+function removeLoading() {
+  const el = document.getElementById('loading-el');
+  if (el) el.remove();
+}
+
+async function sendMsg() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!apiKey) { alert('右上でAPIキーを設定してください。'); return; }
+
+  input.value = '';
+  input.style.height = '46px';
+  document.getElementById('send-btn').disabled = true;
+  lastQueryText = text;
+
+  addMsg('user', text);
+  history.push({ role: 'user', content: text });
+
+  const useDrive = document.getElementById('sw-drive').checked;
+  const useWeb = document.getElementById('sw-web').checked;
+  const folderId = document.getElementById('drive-folder-id').value.trim();
+
+  addLoading();
+
+  // ステップ表示
+  const steps = [];
+  if (useDrive) {
+    steps.push('📁 Google Drive検索中...');
+    updateLoading('📁 自社ナレッジを検索中...');
+  }
+  if (useWeb) {
+    setTimeout(() => updateLoading('🌐 Web検索中...'), 800);
+  }
+  setTimeout(() => updateLoading('🤖 Claude AIが統合・回答生成中...'), 1400);
+
+  // システムプロンプト（3層優先度）
+  const driveNote = folderId ? `\n参照対象Google DriveフォルダID: ${folderId}` : '';
+  const systemPrompt = `あなたは熊本県の電気工事・管工事専門会社「joint tech」の業務支援AIエージェント（オーケストレーター）です。
+
+## 3層ナレッジ統合の回答プロセス（必ず順守）
+
+### 【最優先】自社ナレッジDB（Google Drive）${driveNote}
+- Google Driveに格納された自社資料を最初に検索する
+- 過去施工事例・社内マニュアル・施工手順書・積算データから回答
+- 参照できた場合：「✅ 自社ナレッジより：」と明記して出典ファイル名を示す
+- 参照できなかった場合：次の優先度に移行
+
+### 【第二優先】業界標準ナレッジ
+以下の規準を内部知識として活用する：
+- 公共建築工事標準仕様書（機械設備工事編・電気設備工事編）
+- 公共建築改修工事標準仕様書
+- 電気設備工事標準仕様書（国土交通省）
+- 内線規程（JEAC 8001）
+- 電気工事士法・建設業法・消防法・労働安全衛生法・建築基準法
+- 電気・管工事施工管理技士の実務知識
+- 参照した場合：「📋 標準仕様より（出典：○○）：」と明記
+
+### 【補助的使用】Web検索
+- 自社・標準知識で不足する場合のみ使用
+- メーカー公式・国交省・消防庁など信頼性の高いソースを優先
+- 参照した場合：「🌐 Web参照（要現場確認）：」と明記
+
+## 書類・ファイル作成の指示
+「ExcelやWordで作成」という依頼には以下の形式で回答：
+
+---
+【ファイル名】〇〇.xlsx（または.docx）
+【対象工事】
+【シート構成 / 章構成】
+【内容】
+（具体的な表・項目・内容を詳細に記載）
+---
+
+施工計画書・日報・安全書類・試験成績書・チェックリスト・施工体制台帳等を建設業実務に即して作成する。
+
+## 絶対に行わないこと
+- 工事の適法性の最終判断を断言する
+- 自社ナレッジにない情報を「弊社では」と偽る
+- Web情報を自社ルールとして提示する
+- 不確かな情報を確実なものとして提示する`;
+
+  // ツール設定
+  const tools = [];
+  if (useWeb) {
+    tools.push({ type: "web_search_20250305", name: "web_search" });
+  }
+
+  // MCPサーバー設定（Google Drive）
+  const mcpServers = [];
+  if (useDrive) {
+    mcpServers.push({
+      type: "url",
+      url: "https://drivemcp.googleapis.com/mcp/v1",
+      name: "google-drive"
+    });
+  }
+
+  try {
+    const body = {
+      model: "claude-sonnet-4-6",
+      max_tokens: 4000,
+      system: systemPrompt,
+      messages: history,
+    };
+    if (tools.length > 0) body.tools = tools;
+    if (mcpServers.length > 0) body.mcp_servers = mcpServers;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `APIエラー ${res.status}`);
+    }
+
+    const data = await res.json();
+    removeLoading();
+
+    let aiText = '';
+    for (const block of data.content || []) {
+      if (block.type === 'text') aiText += block.text;
+      if (block.type === 'mcp_tool_result') {
+        for (const c of block.content || []) {
+          if (c.type === 'text' && c.text) {
+            // Drive結果は内部で使用済み（AIが処理）
+          }
+        }
+      }
+    }
+
+    if (!aiText) aiText = '申し訳ございません。回答を生成できませんでした。再度お試しください。';
+
+    lastAiText = aiText;
+    const sources = detectSources(aiText);
+    if (useDrive) sources.push('kb');
+    if (useWeb && aiText.includes('🌐')) sources.push('web');
+
+    const showFile = needsFile(text) || needsFile(aiText);
+    addMsg('ai', aiText, [...new Set(sources)], showFile);
+    history.push({ role: 'assistant', content: aiText });
+
+  } catch(e) {
+    removeLoading();
+    const errDiv = document.createElement('div');
+    errDiv.className = 'err';
+    errDiv.innerHTML = `❌ エラー: ${e.message}<br><small style="color:#fca5a5;opacity:.7;">APIキーを確認するか、しばらく待ってから再試行してください。</small>`;
+    document.getElementById('messages').appendChild(errDiv);
+    history.pop();
+  }
+
+  document.getElementById('send-btn').disabled = false;
+}
+
+// Excel生成
+function dlExcel() {
+  if (!lastAiText) return;
+
+  const wb = XLSX.utils.book_new();
+  const lines = lastAiText.split('\n');
+
+  // ファイル名取得
+  let fname = '資料';
+  const fm = lastAiText.match(/【ファイル名】\s*(.+)/);
+  if (fm) fname = fm[1].replace(/\.(xlsx?|docx?)/gi,'').trim();
+
+  // 表データを解析（パイプ区切り）
+  const tableRows = [];
+  let nonTableContent = [];
+  for (const line of lines) {
+    if (line.includes('|')) {
+      const cells = line.split('|').map(c=>c.trim()).filter(c=>c&&!c.match(/^[-:]+$/));
+      if (cells.length > 1) { tableRows.push(cells); continue; }
+    }
+    if (!line.match(/【.+?】/)) nonTableContent.push(line);
+  }
+
+  // シート1: メインコンテンツ
+  let ws1;
+  if (tableRows.length > 0) {
+    ws1 = XLSX.utils.aoa_to_sheet(tableRows);
+    const maxCols = Math.max(...tableRows.map(r=>r.length));
+    ws1['!cols'] = Array(maxCols).fill(0).map((_,i)=>({
+      wch: Math.min(Math.max(...tableRows.map(r=>(r[i]||'').length)) * 1.8 + 4, 45)
+    }));
+  } else {
+    // テキストをそのまま
+    const rows = lines.filter(l=>l.trim()).map(l=>[l]);
+    ws1 = XLSX.utils.aoa_to_sheet([[fname],[''],['作成日：'+new Date().toLocaleDateString('ja-JP')],[''],  ...rows]);
+    ws1['!cols'] = [{wch:60}];
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws1, fname.substring(0,31));
+
+  // シート2: AI回答全文
+  const ws2 = XLSX.utils.aoa_to_sheet([
+    ['AI回答全文'],[''],
+    ...lines.map(l=>[l])
+  ]);
+  ws2['!cols'] = [{wch:80}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'AI回答');
+
+  XLSX.writeFile(wb, `${fname}.xlsx`);
+}
+
+// Word（.doc）生成
+function dlWord() {
+  if (!lastAiText) return;
+
+  let fname = '資料';
+  const fm = lastAiText.match(/【ファイル名】\s*(.+)/);
+  if (fm) fname = fm[1].replace(/\.(xlsx?|docx?)/gi,'').trim();
+
+  const today = new Date().toLocaleDateString('ja-JP');
+
+  // テーブル変換
+  let bodyContent = lastAiText;
+  const tableRegex = /(\|.+\|[\s\S]*?)(?=\n\n|\n[^|]|$)/g;
+  bodyContent = bodyContent.replace(tableRegex, (match) => {
+    const rows = match.trim().split('\n').filter(r=>r.includes('|'));
+    let html = '<table border="1" style="border-collapse:collapse;width:100%;margin:10px 0;">';
+    rows.forEach((row, idx) => {
+      if (row.match(/^\|[-:\s|]+\|$/)) return;
+      const cells = row.split('|').map(c=>c.trim()).filter(c=>c);
+      const tag = idx === 0 ? 'th' : 'td';
+      const style = idx === 0 ? 'background:#0d9488;color:white;padding:6px 8px;' : 'padding:5px 8px;';
+      html += '<tr>' + cells.map(c=>`<${tag} style="${style}">${c}</${tag}>`).join('') + '</tr>';
+    });
+    html += '</table>';
+    return html;
+  });
+
+  // 見出し変換
+  bodyContent = bodyContent
+    .replace(/【(.+?)】/g, '<h3 style="color:#0f2035;margin-top:16px;border-bottom:1px solid #0d9488;padding-bottom:4px;">$1</h3>')
+    .replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>')
+    .replace(/^#{2}\s+(.+)$/gm, '<h2 style="color:#0d9488;">$1</h2>')
+    .replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>')
+    .replace(/✅/g,'<span style="color:#10b981;">✅</span>')
+    .replace(/📋/g,'<span style="color:#3b82f6;">📋</span>')
+    .replace(/🌐/g,'<span style="color:#f59e0b;">🌐</span>')
+    .split('\n').map(l => l.startsWith('<') ? l : `<p style="margin:4px 0;line-height:1.8;">${l || '&nbsp;'}</p>`).join('\n');
+
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"><title>${fname}</title>
+<style>
+  body { font-family:'MS Gothic',sans-serif;font-size:10.5pt;margin:2cm;color:#1e293b; }
+  h1 { font-size:18pt;color:#0f2035;border-bottom:3px solid #0d9488;padding-bottom:8px;margin-bottom:16px; }
+  h2 { font-size:14pt;color:#0d9488;margin-top:20px; }
+  h3 { font-size:12pt;color:#0f2035;margin-top:14px; }
+  table { border-collapse:collapse;width:100%;margin:12px 0;font-size:10pt; }
+  th { background:#0d9488;color:white;padding:6px 10px;text-align:left; }
+  td { border:1px solid #ccc;padding:5px 10px; }
+  tr:nth-child(even) td { background:#f0fafa; }
+  .footer { color:#94a3b8;font-size:9pt;margin-top:40px;border-top:1px solid #e2e8f0;padding-top:10px; }
+</style></head>
+<body>
+<h1>${fname}</h1>
+${bodyContent}
+<div class="footer">
+  作成日：${today}　|　joint tech AIエージェント（船井総合研究所 powered by Claude API）<br>
+  ※本書類はAIが生成したたたき台です。施工前に必ず現場条件・最新法令と照合してください。
+</div>
+</body></html>`;
+
+  const blob = new Blob(['\ufeff'+html], {type:'application/msword;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${fname}.doc`;
+  a.click();
+}
+
+function copyTxt() {
+  if (!lastAiText) return;
+  navigator.clipboard.writeText(lastAiText).then(() => alert('コピーしました！'));
+}
+</script>
+</body>
+</html>
