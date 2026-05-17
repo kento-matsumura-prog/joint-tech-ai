@@ -535,7 +535,6 @@ async function sendMsg() {
       messages: history,
     };
     if (tools.length > 0) body.tools = tools;
-    if (mcpServers.length > 0) body.mcp_servers = mcpServers;
 
     const res = await fetch('https://royal-haze-416c.kento-matsumura.workers.dev/', {
       method: 'POST',
