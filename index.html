@@ -538,10 +538,14 @@ async function sendMsg() {
     if (mcpServers.length > 0) body.mcp_servers = mcpServers;
 
     const res = await fetch('https://royal-haze-416c.kento-matsumura.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01',
+  },
+  body: JSON.stringify(body)
+});
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
