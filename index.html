@@ -7,46 +7,84 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Noto Sans JP', 'Yu Gothic', sans-serif; background: #0f2035; color: #fff; height: 100vh; display: flex; flex-direction: column; }
-header { background: #1a3352; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(13,148,136,0.3); }
-.logo { font-size: 18px; font-weight: 700; color: #14b8a6; }
-.logo span { font-size: 12px; color: #94a3b8; display: block; font-weight: 400; }
+body { font-family: 'Yu Gothic', 'Noto Sans JP', sans-serif; background: #0f2035; color: #fff; height: 100vh; display: flex; flex-direction: column; }
+header { background: #1a3352; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(13,148,136,0.3); flex-shrink: 0; }
+.logo { font-size: 17px; font-weight: 700; color: #14b8a6; }
+.logo span { font-size: 11px; color: #94a3b8; display: block; font-weight: 400; margin-top: 2px; }
 .api-area { display: flex; gap: 8px; align-items: center; }
-#apikey { width: 280px; padding: 7px 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 13px; }
+#apikey { width: 260px; padding: 7px 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff; font-size: 13px; }
 #apikey:focus { outline: none; border-color: #0d9488; }
-button { padding: 7px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+.btn { padding: 7px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; font-family: inherit; }
 .btn-teal { background: #0d9488; color: #fff; }
 .btn-teal:hover { background: #14b8a6; }
-.messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+.main { display: flex; flex: 1; overflow: hidden; }
+
+/* サイドバー */
+.sidebar { width: 220px; background: #1a3352; border-right: 1px solid rgba(13,148,136,0.15); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; }
+.sb-title { padding: 12px 14px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #64748b; font-weight: 600; }
+.qbtn { display: block; width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 7px; color: #fff; padding: 8px 10px; margin: 0 8px 5px; width: calc(100% - 16px); font-size: 11.5px; text-align: left; cursor: pointer; font-family: inherit; transition: all 0.2s; line-height: 1.4; }
+.qbtn:hover { background: rgba(13,148,136,0.2); border-color: #0d9488; }
+.tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; margin-left: 4px; font-weight: 700; }
+.tag-xl { background: rgba(16,185,129,0.2); color: #10b981; }
+.tag-q { background: rgba(148,163,184,0.2); color: #94a3b8; }
+.sb-div { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 0; }
+
+/* チャット */
+.chat { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.messages::-webkit-scrollbar { width: 3px; }
+.messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); }
 .msg-user { display: flex; justify-content: flex-end; }
-.msg-ai { display: flex; justify-content: flex-start; }
-.bubble { max-width: 75%; padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
-.bubble-user { background: #0d9488; border-radius: 12px 3px 12px 12px; }
-.bubble-ai { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px 12px 12px 12px; }
-.file-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.fbtn { padding: 6px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid; }
+.msg-ai { display: flex; justify-content: flex-start; gap: 8px; }
+.avatar { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg,#0d9488,#14b8a6); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; margin-top: 2px; }
+.bubble { max-width: 78%; padding: 11px 15px; border-radius: 10px; font-size: 13.5px; line-height: 1.75; white-space: pre-wrap; word-wrap: break-word; }
+.bubble-user { background: #0d9488; border-radius: 10px 3px 10px 10px; }
+.bubble-ai { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 3px 10px 10px 10px; }
+.file-btns { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; }
+.fbtn { padding: 6px 12px; border-radius: 7px; font-size: 11.5px; font-weight: 600; cursor: pointer; border: 1px solid; font-family: inherit; transition: all 0.2s; }
 .fbtn-xl { border-color: rgba(16,185,129,0.4); color: #10b981; background: rgba(16,185,129,0.08); }
 .fbtn-xl:hover { background: rgba(16,185,129,0.2); }
 .fbtn-wd { border-color: rgba(59,130,246,0.4); color: #60a5fa; background: rgba(59,130,246,0.08); }
 .fbtn-wd:hover { background: rgba(59,130,246,0.2); }
 .fbtn-cp { border-color: rgba(148,163,184,0.3); color: #94a3b8; background: rgba(148,163,184,0.05); }
-.loading { display: flex; gap: 6px; padding: 14px 18px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: #14b8a6; animation: bounce 1.2s infinite; }
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-8px)} }
-.err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #fca5a5; }
-.input-area { padding: 16px 20px; background: #1a3352; border-top: 1px solid rgba(13,148,136,0.2); }
-.input-row { display: flex; gap: 10px; }
-#userinput { flex: 1; padding: 12px 16px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: #fff; font-size: 14px; resize: none; min-height: 48px; max-height: 140px; font-family: inherit; }
+.src-tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 600; display: inline-block; margin-top: 6px; }
+.src-std { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.src-web { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.loading-bubble { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.09); border-radius: 3px 10px 10px 10px; padding: 14px 18px; }
+.dots { display: flex; gap: 5px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #14b8a6; animation: bounce 1.2s infinite; }
+.dot:nth-child(2) { animation-delay: .2s; }
+.dot:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-7px)} }
+.loading-txt { font-size: 11px; color: #14b8a6; margin-top: 6px; }
+.err { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #fca5a5; }
+.welcome { text-align: center; padding: 36px 20px; }
+.welcome h2 { font-size: 20px; color: #14b8a6; margin-bottom: 10px; }
+.welcome p { font-size: 13px; color: #94a3b8; line-height: 1.8; }
+.arch { display: flex; gap: 8px; justify-content: center; margin: 12px 0; flex-wrap: wrap; }
+.arch-box { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 600; }
+.a1 { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+.a2 { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+.a3 { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+
+/* 入力 */
+.input-area { padding: 14px 18px; background: #1a3352; border-top: 1px solid rgba(13,148,136,0.15); flex-shrink: 0; }
+.web-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; color: #64748b; }
+.sw { position: relative; width: 34px; height: 18px; display: inline-block; }
+.sw input { opacity: 0; width: 0; height: 0; }
+.sw-s { position: absolute; inset: 0; border-radius: 9px; cursor: pointer; transition: .3s; background: rgba(255,255,255,0.1); }
+.sw-s:before { content:''; position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fff; left: 3px; top: 3px; transition: .3s; }
+.sw input:checked + .sw-s { background: #f59e0b; }
+.sw input:checked + .sw-s:before { transform: translateX(16px); }
+.input-row { display: flex; gap: 9px; align-items: flex-end; }
+#userinput { flex: 1; padding: 11px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 13.5px; resize: none; min-height: 46px; max-height: 130px; font-family: inherit; line-height: 1.5; }
 #userinput:focus { outline: none; border-color: #0d9488; }
-#sendbtn { width: 48px; height: 48px; border-radius: 10px; background: #0d9488; font-size: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-#sendbtn:hover { background: #14b8a6; }
-#sendbtn:disabled { background: rgba(255,255,255,0.1); cursor: not-allowed; }
-.hint { font-size: 11px; color: #64748b; text-align: center; margin-top: 8px; }
-.welcome { text-align: center; padding: 40px 20px; }
-.welcome h2 { font-size: 22px; color: #14b8a6; margin-bottom: 12px; }
-.welcome p { font-size: 14px; color: #94a3b8; line-height: 1.8; }
+#userinput::placeholder { color: #475569; }
+#sendbtn { width: 46px; height: 46px; border-radius: 10px; background: #0d9488; border: none; cursor: pointer; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all .2s; }
+#sendbtn:hover { background: #14b8a6; transform: scale(1.04); }
+#sendbtn:disabled { background: rgba(255,255,255,0.08); cursor: not-allowed; transform: none; }
+.hint { font-size: 10.5px; color: #475569; text-align: center; margin-top: 7px; }
 </style>
 </head>
 <body>
@@ -54,141 +92,309 @@ button { padding: 7px 16px; border-radius: 8px; border: none; cursor: pointer; f
 <header>
   <div class="logo">
     ⚡ joint tech AIエージェント
-    <span>3層ナレッジ構成 powered by Claude API</span>
+    <span>電気工事・管工事 専門AI ／ 3層ナレッジ構成 powered by Claude</span>
   </div>
   <div class="api-area">
-    <input type="password" id="apikey" placeholder="Anthropic APIキーを入力（sk-ant-...）" />
-    <button class="btn-teal" onclick="setKey()">設定</button>
+    <input type="password" id="apikey" placeholder="APIキー（省略可）" />
+    <button class="btn btn-teal" onclick="setKey()">設定</button>
   </div>
 </header>
 
-<div class="messages" id="msgs">
-  <div class="welcome">
-    <h2>⚡ joint tech AIエージェント</h2>
-    <p>電気工事・管工事の専門AIです。<br>
-    「ExcelやWordで作成して」と言うとファイルをダウンロードできます。<br>
-    まず右上にAPIキーを入力して「設定」してください。</p>
-  </div>
-</div>
+<div class="main">
+  <aside class="sidebar">
+    <div class="sb-title">書類作成</div>
+    <button class="qbtn" onclick="q('LED照明取替工事の施工計画書を作成してください。工事概要・施工体制・施工手順・安全管理・品質管理・工程表を含めてください。Excelで出力してください。')">施工計画書 <span class="tag tag-xl">Excel</span></button>
+    <button class="qbtn" onclick="q('電気工事の現場日報テンプレートをExcelで作成してください。日付・天気・作業員名・作業内容・使用機材・安全確認・進捗・翌日予定の項目を含めてください。')">現場日報 <span class="tag tag-xl">Excel</span></button>
+    <button class="qbtn" onclick="q('KY（危険予知）活動記録表をExcelで作成してください。電気・管工事現場向けに、作業名・危険予知項目・対策・指差し呼称・確認者のフォーマットにしてください。')">KY活動記録表 <span class="tag tag-xl">Excel</span></button>
+    <button class="qbtn" onclick="q('電気工事完成検査チェックリストをExcelで作成してください。内線規程・電気設備技術基準に基づいた確認項目を網羅してください。')">完成検査チェックリスト <span class="tag tag-xl">Excel</span></button>
+    <button class="qbtn" onclick="q('施工体制台帳のテンプレートをExcelで作成してください。建設業法第24条の7に基づいた必要項目（元請・下請情報・主任技術者・安全衛生責任者等）を含めてください。')">施工体制台帳 <span class="tag tag-xl">Excel</span></button>
+    <button class="qbtn" onclick="q('給排水衛生設備工事の試験成績書テンプレートをExcelで作成してください。水圧試験・満水試験・通水試験の記録項目を含めてください。')">試験成績書 <span class="tag tag-xl">Excel</span></button>
 
-<div class="input-area">
-  <div class="input-row">
-    <textarea id="userinput" placeholder="質問・依頼を入力してください" onkeydown="if(event.ctrlKey&&event.key==='Enter'){send()}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
-    <button id="sendbtn" onclick="send()">➤</button>
+    <div class="sb-div"></div>
+    <div class="sb-title">技術・法令質問</div>
+    <button class="qbtn" onclick="q('電気工事における接地工事の種類（A種・B種・C種・D種）と施工基準を、電気設備技術基準に基づいて詳しく説明してください。')">接地工事の基準 <span class="tag tag-q">質問</span></button>
+    <button class="qbtn" onclick="q('管工事における給水配管の施工手順と注意事項を、公共建築工事標準仕様書（機械設備工事編）に基づいて説明してください。')">給水配管施工手順 <span class="tag tag-q">質問</span></button>
+    <button class="qbtn" onclick="q('防火区画貫通処理の施工方法と法的根拠（建築基準法・消防法）を詳しく説明してください。電気配管・給排水管それぞれの処理方法を教えてください。')">防火区画貫通処理 <span class="tag tag-q">質問</span></button>
+    <button class="qbtn" onclick="q('建設業法に基づく施工体制台帳と施工体系図の作成要件と、違反した場合の罰則について説明してください。')">施工体制台帳の要件 <span class="tag tag-q">質問</span></button>
+    <button class="qbtn" onclick="q('低圧電気設備における絶縁抵抗測定の方法・基準値・測定タイミングを、電気設備技術基準と内線規程に基づいて説明してください。')">絶縁抵抗測定 <span class="tag tag-q">質問</span></button>
+  </aside>
+
+  <div class="chat">
+    <div class="messages" id="msgs">
+      <div class="welcome">
+        <h2>⚡ joint tech AIエージェント</h2>
+        <div class="arch">
+          <div class="arch-box a1">✅ 電気・管工事専門知識</div>
+          <div class="arch-box a2">📋 標準仕様書・法令</div>
+          <div class="arch-box a3">🌐 Web検索（補助）</div>
+        </div>
+        <p>電気工事・管工事の専門AIです。<br>
+        施工計画書・日報・安全書類の作成や技術的な質問にお答えします。<br>
+        「Excelで作成して」と言うとファイルをダウンロードできます。</p>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="web-toggle">
+        <label class="sw">
+          <input type="checkbox" id="web-sw">
+          <span class="sw-s"></span>
+        </label>
+        <span id="web-lbl">🌐 Web検索OFF（最新製品情報・法改正を調べる場合はON）</span>
+      </div>
+      <div class="input-row">
+        <textarea id="userinput"
+          placeholder="質問・依頼を入力してください。例：「ガス給湯器取替工事の施工計画書をExcelで作成して」"
+          onkeydown="if(event.ctrlKey&&event.key==='Enter'){send()}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,130)+'px'"></textarea>
+        <button id="sendbtn" onclick="send()">➤</button>
+      </div>
+      <div class="hint">Ctrl+Enter で送信 ｜ Excel・Word形式でダウンロード可能 ｜ 出典を自動表示</div>
+    </div>
   </div>
-  <div class="hint">Ctrl+Enter で送信 ｜ Excel・Word形式でダウンロード可能</div>
 </div>
 
 <script>
 const WORKER = 'https://royal-haze-416c.kento-matsumura.workers.dev/';
-let key = '';
 let history = [];
 let lastText = '';
 
+// Web検索トグル
+document.getElementById('web-sw').addEventListener('change', function() {
+  document.getElementById('web-lbl').textContent = this.checked
+    ? '🌐 Web検索ON（最新情報を検索します）'
+    : '🌐 Web検索OFF（最新製品情報・法改正を調べる場合はON）';
+});
+
 function setKey() {
-  const v = document.getElementById('apikey').value.trim();
-  if (!v || v.includes('•')) { alert('APIキーを入力してください'); return; }
-  key = v;
-  document.getElementById('apikey').value = '•'.repeat(20);
-  addAI('✅ APIキーを設定しました！\n\n電気工事・管工事の専門AIとして回答します。\nExcelやWordでの書類作成もできます。');
+  alert('✅ 設定しました！ご質問をどうぞ。');
+}
+
+function q(text) {
+  document.getElementById('userinput').value = text;
+  send();
+}
+
+function esc(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 }
 
 function addUser(t) {
   const msgs = document.getElementById('msgs');
   msgs.querySelector('.welcome')?.remove();
-  msgs.innerHTML += `<div class="msg-user"><div class="bubble bubble-user">${esc(t)}</div></div>`;
+  const d = document.createElement('div');
+  d.className = 'msg-user';
+  d.innerHTML = `<div class="bubble bubble-user">${esc(t)}</div>`;
+  msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
 function addAI(t, showFile=false) {
   const msgs = document.getElementById('msgs');
-  msgs.querySelector('.welcome')?.remove();
   lastText = t;
-  let btns = showFile ? `<div class="file-btns">
-    <button class="fbtn fbtn-xl" onclick="dlExcel()">📊 Excelで保存</button>
-    <button class="fbtn fbtn-wd" onclick="dlWord()">📄 Wordで保存</button>
-    <button class="fbtn fbtn-cp" onclick="copyText()">📋 コピー</button>
-  </div>` : '';
-  msgs.innerHTML += `<div class="msg-ai"><div><div class="bubble bubble-ai">${esc(t)}</div>${btns}</div></div>`;
+
+  // 出典バッジを検出
+  let badges = '';
+  if (/標準仕様書|内線規程|電気設備技術基準|建設業法|消防法|建築基準法|労働安全衛生法|JEAC/i.test(t)) {
+    badges += '<span class="src-tag src-std">📋 標準仕様・法令参照</span> ';
+  }
+  if (/Web検索|最新情報|メーカー|カタログ/i.test(t)) {
+    badges += '<span class="src-tag src-web">🌐 Web参照</span>';
+  }
+
+  let fileBtns = '';
+  if (showFile) {
+    fileBtns = `<div class="file-btns">
+      <button class="fbtn fbtn-xl" onclick="dlExcel()">📊 Excelで保存</button>
+      <button class="fbtn fbtn-wd" onclick="dlWord()">📄 Wordで保存</button>
+      <button class="fbtn fbtn-cp" onclick="copyText()">📋 コピー</button>
+    </div>`;
+  }
+
+  const d = document.createElement('div');
+  d.className = 'msg-ai';
+  d.innerHTML = `
+    <div class="avatar">⚡</div>
+    <div>
+      <div class="bubble bubble-ai">${esc(t)}</div>
+      ${badges ? `<div style="margin-top:6px;">${badges}</div>` : ''}
+      ${fileBtns}
+    </div>`;
+  msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function addLoading() {
+function addLoading(step='処理中...') {
   const msgs = document.getElementById('msgs');
-  msgs.innerHTML += `<div class="msg-ai" id="loading"><div class="bubble bubble-ai loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  const d = document.createElement('div');
+  d.className = 'msg-ai';
+  d.id = 'loading-el';
+  d.innerHTML = `
+    <div class="avatar">⚡</div>
+    <div>
+      <div class="loading-bubble">
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        <div class="loading-txt" id="loading-txt">${step}</div>
+      </div>
+    </div>`;
+  msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function updateLoading(t) {
+  const el = document.getElementById('loading-txt');
+  if (el) el.textContent = t;
+}
+
+function removeLoading() {
+  document.getElementById('loading-el')?.remove();
+}
 
 async function send() {
   const input = document.getElementById('userinput');
   const text = input.value.trim();
   if (!text) return;
-  if (!key) { alert('右上でAPIキーを設定してください'); return; }
 
   input.value = '';
-  input.style.height = '48px';
+  input.style.height = '46px';
   document.getElementById('sendbtn').disabled = true;
 
   addUser(text);
   history.push({ role: 'user', content: text });
-  addLoading();
 
-  const sys = `あなたは熊本県の電気工事・管工事専門会社「joint tech」の業務支援AIエージェントです。
+  const useWeb = document.getElementById('web-sw').checked;
+  addLoading(useWeb ? '🌐 Web検索中...' : '🤖 AIが考えています...');
+  if (useWeb) setTimeout(() => updateLoading('🤖 情報を統合して回答生成中...'), 2000);
 
-## 回答の優先順位
-1. 電気・管工事の専門知識（電気設備工事標準仕様書・内線規程・公共建築工事標準仕様書・建設業法・労働安全衛生法等に基づく）
-2. 業界標準・法令に基づいた正確な情報
-3. 実務に即した具体的な回答
+  // 詳細なシステムプロンプト
+  const sys = `あなたは熊本県の電気工事・管工事専門会社「joint tech」の業務支援AIエージェントです。電気設備工事・管工事・施工管理に深く精通した専門家として、現場担当者・施工管理者の「AI秘書」として機能します。
 
-## 書類作成の指示
-「ExcelやWordで作成して」という依頼には以下の形式で回答：
-【ファイル名】〇〇.xlsx
-【内容】
-（表形式や構造化された具体的な内容）
+## 回答の優先順位と情報ソース
 
-施工計画書・日報・安全書類・試験成績書・チェックリスト等を建設業実務に即して作成する。
+### 【最優先】専門技術知識
+以下の知識を深く活用して回答する：
+
+◆ 電気工事関連
+- 電気設備技術基準・解釈（経済産業省）
+- 内線規程（JEAC 8001）
+- 公共建築工事標準仕様書（電気設備工事編）
+- 電気工事施工管理技士の実務知識
+- 電気工事士法・電気事業法
+- 接地工事（A種・B種・C種・D種）の基準
+- 絶縁抵抗測定・絶縁耐力試験の基準値
+- 幹線設計・分岐回路の計算方法
+- 照明設計・動力設備の施工手順
+- 太陽光発電・蓄電池設備の施工
+
+◆ 管工事関連
+- 公共建築工事標準仕様書（機械設備工事編）
+- 給水装置工事主任技術者の実務知識
+- 管工事施工管理技士の実務知識
+- 給排水衛生設備の施工基準
+- 空調設備（冷暖房・換気）の施工手順
+- ガス設備（都市ガス・LPG）の施工基準
+- 消火設備の施工・点検基準
+- 水圧試験・満水試験・気密試験の方法と基準値
+- 保温工事・防露工事の施工方法
+
+◆ 共通・施工管理
+- 建設業法（施工体制台帳・主任技術者・監理技術者）
+- 建築基準法（防火区画貫通・耐火構造）
+- 消防法（消防設備・危険物）
+- 労働安全衛生法（安全衛生管理体制・特別教育）
+- 廃棄物処理法（産業廃棄物管理）
+- 公共工事の品質確保法
+
+### 【第二優先】書類作成の専門知識
+以下の書類を実務レベルで作成する：
+- 施工計画書（工事概要・施工体制・施工手順・品質管理・安全管理・工程表）
+- 施工要領書（各工種別の詳細手順）
+- 施工体制台帳・施工体系図（建設業法第24条の7）
+- 現場日報・週報・月報
+- KY（危険予知）活動記録表
+- ヒヤリハット報告書
+- 安全衛生管理計画書
+- 品質管理計画書・品質記録
+- 試験成績書（電気・給排水・空調）
+- 完成検査チェックリスト
+- 竣工図・as-built図の説明
+- 作業員名簿・施工体制台帳
+
+## 書類作成の出力フォーマット
+
+書類作成依頼には必ず以下の形式で回答する：
+
+【ファイル名】〇〇_〇〇工事.xlsx
+【工事名】
+【対象工事の概要】
+
+【シート1：〇〇】
+| 項目 | 内容 | 備考 |
+|------|------|------|
+| （具体的な項目） | （具体的な内容） | （補足） |
+
+【シート2：〇〇】
+（以下続く）
+
+※ 表は必ずMarkdownの表形式（|で区切る）で出力する
+※ 項目は実務で使える具体的な内容にする（「〇〇を記入」ではなく実際の内容を書く）
+※ 建設業の実務経験者が見て「使える」レベルの内容にする
+
+## 回答ルール
+
+1. 法令・規格を引用する場合は「電気設備技術基準 第〇条」のように出典を明記する
+2. 数値基準は正確に記載する（例：D種接地工事の抵抗値は100Ω以下）
+3. 施工手順は番号付きで具体的に記載する
+4. 安全上の注意事項は必ず明記する
+5. 不確かな情報は「要現場確認」と明記する
+6. 熊本県・九州地方の建設業の慣習も考慮する
 
 ## 絶対に行わないこと
-- 工事の適法性の最終判断を断言する
-- 根拠のない情報を事実として提示する`;
+- 工事の適法性の最終判断を断言する（「専門家への確認を推奨」と付記する）
+- 根拠のない数値を事実として提示する
+- 実務で使えないレベルの曖昧な回答をする`;
 
   try {
+    const bodyData = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4000,
+      system: sys,
+      messages: history,
+    };
+
+    if (useWeb) {
+      bodyData.tools = [{ type: 'web_search_20250305', name: 'web_search' }];
+    }
+
     const res = await fetch(WORKER, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 4000,
-        system: sys,
-        messages: history,
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyData)
     });
 
-    document.getElementById('loading')?.remove();
-
+    removeLoading();
     const data = await res.json();
 
     if (!res.ok) {
-      const errMsg = data.error?.message || `APIエラー ${res.status}`;
       const msgs = document.getElementById('msgs');
-      msgs.innerHTML += `<div class="err">❌ ${errMsg}</div>`;
+      msgs.innerHTML += `<div class="err">❌ ${data.error?.message || 'APIエラー ' + res.status}</div>`;
       history.pop();
       return;
     }
 
-    const aiText = data.content?.filter(b=>b.type==='text').map(b=>b.text).join('') || '回答を生成できませんでした。';
-    const needFile = /excel|word|ファイル|作成|テンプレート|書類|日報|計画書|チェック/i.test(text);
+    let aiText = '';
+    for (const block of data.content || []) {
+      if (block.type === 'text') aiText += block.text;
+    }
+    if (!aiText) aiText = '申し訳ございません。回答を生成できませんでした。再度お試しください。';
+
+    lastText = aiText;
+    const needFile = /excel|word|ファイル|作成|テンプレート|書類|日報|計画書|チェック|台帳|記録|成績書/i.test(text);
     addAI(aiText, needFile);
     history.push({ role: 'assistant', content: aiText });
 
   } catch(e) {
-    document.getElementById('loading')?.remove();
+    removeLoading();
     const msgs = document.getElementById('msgs');
     msgs.innerHTML += `<div class="err">❌ 通信エラー: ${e.message}</div>`;
     history.pop();
@@ -197,37 +403,89 @@ async function send() {
   document.getElementById('sendbtn').disabled = false;
 }
 
+// Excel生成
 function dlExcel() {
   if (!lastText) return;
   const wb = XLSX.utils.book_new();
   const fm = lastText.match(/【ファイル名】\s*(.+)/);
-  const name = fm ? fm[1].replace(/\.(xlsx?|docx?)/gi,'').trim() : '資料';
-  const lines = lastText.split('\n');
-  const tableRows = [];
-  for (const l of lines) {
-    if (l.includes('|')) {
-      const cells = l.split('|').map(c=>c.trim()).filter(c=>c&&!c.match(/^[-:]+$/));
-      if (cells.length > 1) tableRows.push(cells);
+  const baseName = fm ? fm[1].replace(/\.(xlsx?|docx?)/gi,'').trim() : '資料';
+
+  // シートごとに分割
+  const sheetBlocks = lastText.split(/【シート\d+[：:].+?】/);
+  const sheetTitles = [...lastText.matchAll(/【シート\d+[：:](.+?)】/g)].map(m => m[1].trim());
+
+  if (sheetTitles.length > 0) {
+    sheetBlocks.slice(1).forEach((block, idx) => {
+      const title = (sheetTitles[idx] || `シート${idx+1}`).substring(0, 31);
+      const rows = [];
+      for (const line of block.split('\n')) {
+        if (line.includes('|')) {
+          const cells = line.split('|').map(c=>c.trim()).filter(c=>c&&!c.match(/^[-:]+$/));
+          if (cells.length > 0) rows.push(cells);
+        } else if (line.trim()) {
+          rows.push([line.trim()]);
+        }
+      }
+      if (rows.length === 0) rows.push([block.trim()]);
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const maxLen = Math.max(...rows.map(r => r.length));
+      ws['!cols'] = Array(maxLen).fill(0).map((_,i) => ({
+        wch: Math.min(Math.max(...rows.map(r=>(r[i]||'').length)) * 1.8 + 4, 50)
+      }));
+      XLSX.utils.book_append_sheet(wb, ws, title);
+    });
+  } else {
+    // テーブル形式で全体を1シートに
+    const rows = [];
+    for (const line of lastText.split('\n')) {
+      if (line.includes('|')) {
+        const cells = line.split('|').map(c=>c.trim()).filter(c=>c&&!c.match(/^[-:]+$/));
+        if (cells.length > 1) rows.push(cells);
+      } else if (line.trim() && !line.startsWith('【')) {
+        rows.push([line.trim()]);
+      }
     }
+    const ws = rows.length > 0
+      ? XLSX.utils.aoa_to_sheet(rows)
+      : XLSX.utils.aoa_to_sheet([[baseName], [''], ...lastText.split('\n').map(l=>[l])]);
+    ws['!cols'] = [{wch: 60}];
+    XLSX.utils.book_append_sheet(wb, ws, baseName.substring(0,31));
   }
-  const ws = tableRows.length > 0
-    ? XLSX.utils.aoa_to_sheet(tableRows)
-    : XLSX.utils.aoa_to_sheet([[name],[''], ...lines.map(l=>[l])]);
-  ws['!cols'] = [{wch:60}];
-  XLSX.utils.book_append_sheet(wb, ws, name.substring(0,31));
-  XLSX.writeFile(wb, `${name}.xlsx`);
+
+  XLSX.writeFile(wb, `${baseName}.xlsx`);
 }
 
+// Word生成
 function dlWord() {
   if (!lastText) return;
   const fm = lastText.match(/【ファイル名】\s*(.+)/);
   const name = fm ? fm[1].replace(/\.(xlsx?|docx?)/gi,'').trim() : '資料';
+  const today = new Date().toLocaleDateString('ja-JP');
+
+  let body = lastText
+    .replace(/【(.+?)】/g, '<h2 style="color:#0d9488;margin-top:18px;border-bottom:2px solid #0d9488;padding-bottom:4px;">$1</h2>')
+    .replace(/\|(.+)\|/g, (m) => {
+      const cells = m.split('|').map(c=>c.trim()).filter(c=>c&&!c.match(/^[-:]+$/));
+      return '<tr>' + cells.map((c,i) => i===0
+        ? `<th style="background:#0d9488;color:white;padding:6px 10px;text-align:left;">${c}</th>`
+        : `<td style="border:1px solid #ccc;padding:5px 10px;">${c}</td>`
+      ).join('') + '</tr>';
+    })
+    .replace(/(<tr>.*?<\/tr>)/gs, '<table style="border-collapse:collapse;width:100%;margin:8px 0;">$1</table>')
+    .split('\n').map(l => l.startsWith('<') ? l : `<p style="margin:3px 0;line-height:1.8;">${l||'&nbsp;'}</p>`).join('\n');
+
   const html = `<html><head><meta charset="utf-8"><title>${name}</title>
-  <style>body{font-family:'MS Gothic',sans-serif;font-size:11pt;margin:2cm;}
-  table{border-collapse:collapse;width:100%;}th{background:#0d9488;color:white;padding:6px;}td{border:1px solid #ccc;padding:5px;}</style>
-  </head><body><h1>${name}</h1><p>${lastText.replace(/\n/g,'<br>')}</p>
-  <p style="color:#999;font-size:9pt;margin-top:30px;">作成日：${new Date().toLocaleDateString('ja-JP')}　joint tech AIエージェント</p>
+  <style>body{font-family:'MS Gothic',sans-serif;font-size:10.5pt;margin:2cm;color:#1e293b;}
+  table{border-collapse:collapse;width:100%;margin:10px 0;}
+  th{background:#0d9488;color:white;padding:6px 10px;}td{border:1px solid #ccc;padding:5px 10px;}
+  tr:nth-child(even) td{background:#f0fafa;}</style></head>
+  <body><h1 style="color:#0f2035;border-bottom:3px solid #0d9488;padding-bottom:8px;">${name}</h1>
+  ${body}
+  <p style="color:#94a3b8;font-size:9pt;margin-top:40px;border-top:1px solid #e2e8f0;padding-top:8px;">
+  作成日：${today}　joint tech AIエージェント（powered by Claude API）<br>
+  ※本書類はAIが生成したたたき台です。実際の施工前に現場条件・最新法令と照合してください。</p>
   </body></html>`;
+
   const blob = new Blob(['\ufeff'+html], {type:'application/msword;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -236,7 +494,7 @@ function dlWord() {
 }
 
 function copyText() {
-  navigator.clipboard.writeText(lastText).then(()=>alert('コピーしました！'));
+  navigator.clipboard.writeText(lastText).then(() => alert('コピーしました！'));
 }
 </script>
 </body>
